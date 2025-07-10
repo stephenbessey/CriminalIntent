@@ -1,20 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { CustomButton } from '../components/CustomButton';
+import { useThemedHeader } from '../hooks/useThemedHeader';
 import { useTheme } from '../context/ThemeContext';
-import { SPACING, FONT_SIZES, FONT_WEIGHTS } from '../constants';
+import { SPACING, FONT_SIZES, FONT_WEIGHTS, BORDER_RADIUS } from '../constants';
 
 export default function SettingsScreen({ navigation }) {
   const { currentTheme, changeTheme, themes } = useTheme();
 
-  React.useEffect(() => {
-    navigation.setOptions({
-      headerStyle: {
-        backgroundColor: currentTheme.colors.primary,
-      },
-      headerTintColor: '#FFFFFF',
-    });
-  }, [navigation, currentTheme]);
+  useThemedHeader(navigation, 'Settings');
 
   const handleThemeSelect = (themeKey) => {
     changeTheme(themeKey);
@@ -24,6 +18,22 @@ export default function SettingsScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ThemeSection
+        themes={themes}
+        currentTheme={currentTheme}
+        onThemeSelect={handleThemeSelect}
+      />
+      
+      <AboutSection />
+    </ScrollView>
+  );
+}
+
+const ThemeSection = ({ themes, currentTheme, onThemeSelect }) => {
+  const styles = createStyles(currentTheme);
+  
+  return (
+    <>
       <Text style={styles.title}>Pick a Theme</Text>
       
       <View style={styles.themeList}>
@@ -31,22 +41,29 @@ export default function SettingsScreen({ navigation }) {
           <CustomButton
             key={key}
             title={theme.name}
-            onPress={() => handleThemeSelect(key)}
+            onPress={() => onThemeSelect(key)}
             variant={currentTheme.name === theme.name ? 'primary' : 'secondary'}
             style={styles.themeButton}
           />
         ))}
       </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        <Text style={styles.sectionText}>
-          Criminal Intent helps you track and manage crime records with photos, dates, and status tracking.
-        </Text>
-      </View>
-    </ScrollView>
+    </>
   );
-}
+};
+
+const AboutSection = () => {
+  const { currentTheme } = useTheme();
+  const styles = createStyles(currentTheme);
+  
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>About</Text>
+      <Text style={styles.sectionText}>
+        Criminal Intent helps you track and manage crime records with photos, dates, and status tracking.
+      </Text>
+    </View>
+  );
+};
 
 const createStyles = (theme) => StyleSheet.create({
   container: {
@@ -73,7 +90,7 @@ const createStyles = (theme) => StyleSheet.create({
     marginTop: SPACING.XL,
     padding: SPACING.MD,
     backgroundColor: theme.colors.surface,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.MEDIUM,
   },
   sectionTitle: {
     fontSize: FONT_SIZES.MEDIUM,

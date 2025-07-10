@@ -9,10 +9,11 @@ import {
   SPACING, 
   BORDER_RADIUS, 
   FONT_SIZES,
-  COMPONENT_HEIGHTS 
+  COMPONENT_HEIGHTS,
+  SHADOWS 
 } from '../constants';
 
-export const DatePicker = ({ date, onDateChange }) => {
+export const DatePicker = ({ date, onDateChange, maxDate = new Date(), disabled = false }) => {
   const { currentTheme } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
   const styles = createStyles(currentTheme);
@@ -24,48 +25,77 @@ export const DatePicker = ({ date, onDateChange }) => {
     setShowPicker(false);
   };
 
+  const openPicker = () => {
+    if (!disabled) {
+      setShowPicker(true);
+    }
+  };
+
   return (
     <View>
       <Pressable
         style={({ pressed }) => [
           styles.dateButton,
-          pressed && styles.pressed
+          pressed && !disabled && styles.pressed,
+          disabled && styles.disabled
         ]}
-        onPress={() => setShowPicker(true)}
+        onPress={openPicker}
+        disabled={disabled}
         accessibilityRole="button"
         accessibilityLabel={`Select date, current: ${formatDateLong(date)}`}
+        accessibilityState={{ disabled }}
       >
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText, disabled && styles.disabledText]}>
           {formatDateLong(date)}
         </Text>
       </Pressable>
 
       {showPicker && (
-        <Modal
-          transparent
-          visible={showPicker}
-          animationType="slide"
-          onRequestClose={() => setShowPicker(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <DateTimePicker
-                value={new Date(date)}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                maximumDate={new Date()}
-              />
-              <CustomButton
-                title="Cancel"
-                onPress={() => setShowPicker(false)}
-                variant="secondary"
-              />
-            </View>
-          </View>
-        </Modal>
+        <DatePickerModal
+          date={date}
+          maxDate={maxDate}
+          onDateChange={handleDateChange}
+          onCancel={() => setShowPicker(false)}
+          theme={currentTheme}
+        />
       )}
     </View>
+  );
+};
+
+const DatePickerModal = ({ date, maxDate, onDateChange, onCancel, theme }) => {
+  const styles = createStyles(theme);
+  
+  return (
+    <Modal
+      transparent
+      visible={true}
+      animationType="slide"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Select Date</Text>
+          
+          <DateTimePicker
+            value={new Date(date)}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+            maximumDate={maxDate}
+          />
+          
+          <View style={styles.modalButtons}>
+            <CustomButton
+              title="Cancel"
+              onPress={onCancel}
+              variant="secondary"
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 };
 
@@ -83,9 +113,16 @@ const createStyles = (theme) => StyleSheet.create({
   pressed: {
     opacity: OPACITY.PRESSED,
   },
+  disabled: {
+    opacity: OPACITY.DISABLED,
+    backgroundColor: theme.colors.background,
+  },
   dateText: {
     fontSize: FONT_SIZES.MEDIUM,
     color: theme.colors.text,
+  },
+  disabledText: {
+    color: theme.colors.textSecondary,
   },
   modalContainer: {
     flex: 1,
@@ -98,10 +135,20 @@ const createStyles = (theme) => StyleSheet.create({
     borderRadius: BORDER_RADIUS.LARGE,
     padding: SPACING.LG,
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    minWidth: 280,
+    ...SHADOWS.MEDIUM,
+  },
+  modalTitle: {
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: SPACING.MD,
+  },
+  modalButtons: {
+    marginTop: SPACING.MD,
+    width: '100%',
+  },
+  modalButton: {
+    marginHorizontal: SPACING.SM,
   },
 });

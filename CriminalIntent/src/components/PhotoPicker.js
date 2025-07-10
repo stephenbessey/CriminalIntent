@@ -9,10 +9,11 @@ import {
   ASPECT_RATIOS, 
   ERROR_MESSAGES,
   COMPONENT_HEIGHTS,
-  BORDER_RADIUS 
+  BORDER_RADIUS,
+  VALIDATION_LIMITS 
 } from '../constants';
 
-export const PhotoPicker = ({ photo, onPhotoSelect }) => {
+export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
   const { currentTheme } = useTheme();
   const styles = createStyles(currentTheme);
 
@@ -41,7 +42,24 @@ export const PhotoPicker = ({ photo, onPhotoSelect }) => {
     }
   };
 
+  const validateImageSize = (asset) => {
+    if (asset.fileSize) {
+      const sizeInMB = asset.fileSize / (1024 * 1024);
+      if (sizeInMB > VALIDATION_LIMITS.PHOTO_MAX_SIZE_MB) {
+        Alert.alert(
+          'File Too Large',
+          `Please select an image smaller than ${VALIDATION_LIMITS.PHOTO_MAX_SIZE_MB}MB`,
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
   const pickImage = async () => {
+    if (disabled) return;
+    
     const hasPermission = await requestPermission();
     if (!hasPermission) return;
 
@@ -50,11 +68,16 @@ export const PhotoPicker = ({ photo, onPhotoSelect }) => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: ASPECT_RATIOS.PHOTO,
-        quality: 1,
+        quality: 0.8, // Reduce quality to manage file size
+        exif: false, // Remove EXIF data for privacy
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        onPhotoSelect(result.assets[0].uri);
+        const asset = result.assets[0];
+        
+        if (validateImageSize(asset)) {
+          onPhotoSelect(asset.uri);
+        }
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -66,32 +89,103 @@ export const PhotoPicker = ({ photo, onPhotoSelect }) => {
     }
   };
 
+  const takePhoto = async () => {
+    if (disabled) return;
+    
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          ERROR_MESSAGES.PERMISSION_REQUIRED,
+          'Please grant camera permissions to take photos.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: ASPECT_RATIOS.PHOTO,
+        quality: 0.8,
+        exif: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const asset = result.assets[0];
+        
+        if (validateImageSize(asset)) {
+          onPhotoSelect(asset.uri);
+        }
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert(
+        'Error',
+        'Unable to take photo. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const showImageOptions = () => {
+    if (disabled) return;
+    
+    Alert.alert(
+      'Select Photo',
+      'Choose how you would like to add a photo',
+      [
+        { text: 'Camera', onPress: takePhoto },
+        { text: 'Photo Library', onPress: pickImage },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
   return (
     <Pressable
       style={({ pressed }) => [
         styles.container,
-        pressed && styles.pressed
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabled
       ]}
-      onPress={pickImage}
+      onPress={showImageOptions}
+      disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={photo ? 'Change photo' : 'Add photo'}
+      accessibilityState={{ disabled }}
     >
       {photo ? (
-        <Image 
-          source={{ uri: photo }} 
-          style={styles.image}
-          accessibilityLabel="Crime scene photo"
-        />
+        <PhotoDisplay photo={photo} />
       ) : (
-        <View style={styles.placeholder}>
-          <Ionicons
-            name="camera"
-            size={ICON_SIZES.XLARGE}
-            color={currentTheme.colors.textSecondary}
-          />
-        </View>
+        <PhotoPlaceholder currentTheme={currentTheme} disabled={disabled} />
       )}
     </Pressable>
+  );
+};
+
+const PhotoDisplay = ({ photo }) => {
+  return (
+    <Image 
+      source={{ uri: photo }} 
+      style={styles.image}
+      accessibilityLabel="Crime scene photo"
+      resizeMode="cover"
+    />
+  );
+};
+
+const PhotoPlaceholder = ({ currentTheme, disabled }) => {
+  const styles = createStyles(currentTheme);
+  
+  return (
+    <View style={styles.placeholder}>
+      <Ionicons
+        name="camera"
+        size={ICON_SIZES.XLARGE}
+        color={disabled ? currentTheme.colors.border : currentTheme.colors.textSecondary}
+      />
+    </View>
   );
 };
 
@@ -108,10 +202,13 @@ const createStyles = (theme) => StyleSheet.create({
   pressed: {
     opacity: OPACITY.PRESSED,
   },
+  disabled: {
+    opacity: OPACITY.DISABLED,
+    borderColor: theme.colors.background,
+  },
   image: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   placeholder: {
     flex: 1,

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { CustomButton } from '../components/CustomButton';
 import { useTheme } from '../context/ThemeContext';
+import { SPACING, FONT_SIZES, FONT_WEIGHTS } from '../constants';
 
 export default function SettingsScreen({ navigation }) {
   const { currentTheme, changeTheme, themes } = useTheme();
@@ -36,6 +37,13 @@ export default function SettingsScreen({ navigation }) {
           />
         ))}
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={styles.sectionText}>
+          Criminal Intent helps you track and manage crime records with photos, dates, and status tracking.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -46,19 +54,36 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    padding: 16,
+    padding: SPACING.MD,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: FONT_SIZES.XLARGE,
+    fontWeight: FONT_WEIGHTS.BOLD,
     color: theme.colors.text,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: SPACING.XL,
   },
   themeList: {
-    gap: 16,
+    gap: SPACING.MD,
   },
   themeButton: {
-    marginBottom: 8,
+    marginBottom: SPACING.SM,
+  },
+  section: {
+    marginTop: SPACING.XL,
+    padding: SPACING.MD,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZES.MEDIUM,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
+    color: theme.colors.text,
+    marginBottom: SPACING.SM,
+  },
+  sectionText: {
+    fontSize: FONT_SIZES.SMALL,
+    color: theme.colors.textSecondary,
+    lineHeight: FONT_SIZES.SMALL * 1.5,
   },
 });

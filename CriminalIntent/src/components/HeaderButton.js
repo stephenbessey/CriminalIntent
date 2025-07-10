@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { ICON_SIZES, OPACITY, SPACING } from '../constants';
 
 export const HeaderButton = ({ icon, onPress, disabled = false }) => {
   const { currentTheme } = useTheme();
@@ -18,7 +19,7 @@ export const HeaderButton = ({ icon, onPress, disabled = false }) => {
     >
       <Ionicons
         name={icon}
-        size={24}
+        size={ICON_SIZES.MEDIUM}
         color={disabled ? currentTheme.colors.textSecondary : currentTheme.colors.primary}
       />
     </Pressable>
@@ -27,14 +28,14 @@ export const HeaderButton = ({ icon, onPress, disabled = false }) => {
 
 const styles = StyleSheet.create({
   button: {
-    padding: 8,
-    marginHorizontal: 4,
-    borderRadius: 8,
+    padding: SPACING.SM,
+    marginHorizontal: SPACING.XS,
+    borderRadius: SPACING.SM,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: OPACITY.PRESSED,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: OPACITY.DISABLED,
   },
 });

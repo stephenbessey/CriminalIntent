@@ -7,12 +7,23 @@ import {
   Text,
   Switch 
 } from 'react-native';
+import { HeaderButton } from '../components/HeaderButton';
 import { CustomTextInput } from '../components/CustomTextInput';
 import { CustomButton } from '../components/CustomButton';
 import { DatePicker } from '../components/DatePicker';
 import { PhotoPicker } from '../components/PhotoPicker';
 import { CrimeService } from '../services/CrimeService';
 import { useTheme } from '../context/ThemeContext';
+import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
+import { 
+  ERROR_MESSAGES, 
+  SUCCESS_MESSAGES, 
+  PLACEHOLDERS,
+  SPACING,
+  FONT_SIZES,
+  FONT_WEIGHTS,
+  SCREENS
+} from '../constants';
 
 export default function DetailScreen({ route, navigation }) {
   const { crimeId } = route.params || {};
@@ -36,7 +47,7 @@ export default function DetailScreen({ route, navigation }) {
       headerRight: () => (
         <HeaderButton
           icon="settings"
-          onPress={() => navigation.navigate('Settings')}
+          onPress={() => navigation.navigate(SCREENS.SETTINGS)}
         />
       ),
     });
@@ -54,32 +65,37 @@ export default function DetailScreen({ route, navigation }) {
         setCrime(crimeData);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to load crime details');
+      Alert.alert('Error', error.message || ERROR_MESSAGES.LOAD_CRIME_DETAILS_FAILED);
+      navigation.goBack();
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!crime.title.trim()) {
-      Alert.alert('Error', 'Please enter a title for the crime');
+    const errors = validateCrime(crime);
+    if (hasValidationErrors(errors)) {
+      Alert.alert('Validation Error', getFirstErrorMessage(errors));
       return;
     }
 
     try {
       setSaving(true);
-      const savedCrime = await CrimeService.saveCrime({
+      await CrimeService.saveCrime({
         ...crime,
         id: crimeId,
       });
       
       Alert.alert(
         'Success',
-        crimeId ? 'Crime updated successfully' : 'Crime created successfully',
-        [{ text: 'OK' }]
+        crimeId ? SUCCESS_MESSAGES.CRIME_UPDATED : SUCCESS_MESSAGES.CRIME_CREATED,
+        [{ 
+          text: 'OK',
+          onPress: () => navigation.goBack()
+        }]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to save crime');
+      Alert.alert('Error', error.message || ERROR_MESSAGES.SAVE_CRIME_FAILED);
     } finally {
       setSaving(false);
     }
@@ -108,7 +124,8 @@ export default function DetailScreen({ route, navigation }) {
         <CustomTextInput
           value={crime.title}
           onChangeText={(text) => updateCrime('title', text)}
-          placeholder="Enter crime title"
+          placeholder={PLACEHOLDERS.CRIME_TITLE}
+          maxLength={100}
         />
       </View>
 
@@ -117,8 +134,9 @@ export default function DetailScreen({ route, navigation }) {
         <CustomTextInput
           value={crime.details}
           onChangeText={(text) => updateCrime('details', text)}
-          placeholder="What happened?"
+          placeholder={PLACEHOLDERS.CRIME_DETAILS}
           multiline
+          maxLength={1000}
         />
       </View>
 
@@ -139,7 +157,8 @@ export default function DetailScreen({ route, navigation }) {
             false: currentTheme.colors.border, 
             true: currentTheme.colors.success 
           }}
-          thumbColor={crime.solved ? '#FFFFFF' : '#FFFFFF'}
+          thumbColor="#FFFFFF"
+          accessibilityLabel="Crime solved status"
         />
       </View>
 
@@ -147,7 +166,7 @@ export default function DetailScreen({ route, navigation }) {
         <CustomButton
           title={saving ? 'Saving...' : 'Save'}
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || loading}
           variant="success"
         />
       </View>
@@ -161,29 +180,29 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    padding: 16,
+    padding: SPACING.MD,
   },
   photoSection: {
     alignItems: 'flex-start',
-    marginBottom: 24,
+    marginBottom: SPACING.LG,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: SPACING.LG - SPACING.XS,
   },
   switchSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: SPACING.LG - SPACING.XS,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: FONT_SIZES.MEDIUM,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
     color: theme.colors.text,
-    marginBottom: 8,
+    marginBottom: SPACING.SM,
   },
   buttonSection: {
-    marginTop: 20,
-    marginBottom: 40,
+    marginTop: SPACING.LG - SPACING.XS,
+    marginBottom: SPACING.XL + SPACING.SM,
   },
 });

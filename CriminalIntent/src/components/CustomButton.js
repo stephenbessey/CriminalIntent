@@ -1,6 +1,14 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { 
+  SPACING, 
+  FONT_SIZES, 
+  FONT_WEIGHTS,
+  BORDER_RADIUS,
+  COMPONENT_HEIGHTS,
+  OPACITY 
+} from '../constants';
 
 export const CustomButton = ({ 
   title, 
@@ -23,20 +31,25 @@ export const CustomButton = ({
       ]}
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled }}
     >
-      <Text style={[styles.text, styles[`${variant}Text`]]}>{title}</Text>
+      <Text style={[styles.text, styles[`${variant}Text`]]}>
+        {title}
+      </Text>
     </Pressable>
   );
 };
 
 const createStyles = (theme) => StyleSheet.create({
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: SPACING.SM + SPACING.XS / 2,
+    paddingHorizontal: SPACING.LG,
+    borderRadius: BORDER_RADIUS.MEDIUM,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: COMPONENT_HEIGHTS.BUTTON,
   },
   primary: {
     backgroundColor: theme.colors.primary,
@@ -50,14 +63,14 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.success,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: OPACITY.PRESSED + 0.1,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: OPACITY.DISABLED,
   },
   text: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: FONT_SIZES.MEDIUM,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
   },
   primaryText: {
     color: '#FFFFFF',

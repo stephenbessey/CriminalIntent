@@ -2,19 +2,11 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { formatDateShort } from '../utils/dateUtils';
+import { ICON_SIZES, OPACITY, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../constants';
 
 export const CrimeListItem = ({ crime, onPress }) => {
   const { currentTheme } = useTheme();
-  
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   const styles = createStyles(currentTheme);
 
   return (
@@ -24,13 +16,15 @@ export const CrimeListItem = ({ crime, onPress }) => {
         pressed && styles.pressed
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Crime: ${crime.title}, ${crime.solved ? 'solved' : 'unsolved'}`}
     >
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>
           {crime.title}
         </Text>
         <Text style={styles.date}>
-          {formatDate(crime.date)}
+          {formatDateShort(crime.date)}
         </Text>
         {crime.details && (
           <Text style={styles.details} numberOfLines={2}>
@@ -42,8 +36,9 @@ export const CrimeListItem = ({ crime, onPress }) => {
         <View style={styles.iconContainer}>
           <Ionicons
             name="hand-left"
-            size={24}
+            size={ICON_SIZES.MEDIUM}
             color={currentTheme.colors.success}
+            accessibilityLabel="Solved"
           />
         </View>
       )}
@@ -55,35 +50,35 @@ const createStyles = (theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: SPACING.MD,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: OPACITY.PRESSED,
   },
   content: {
     flex: 1,
-    marginRight: 16,
+    marginRight: SPACING.MD,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
     color: theme.colors.text,
-    marginBottom: 4,
+    marginBottom: SPACING.XS / 2,
   },
   date: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.SMALL,
     color: theme.colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: SPACING.XS / 2,
   },
   details: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.SMALL,
     color: theme.colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: FONT_SIZES.SMALL * 1.4,
   },
   iconContainer: {
-    padding: 4,
+    padding: SPACING.XS,
   },
 });

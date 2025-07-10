@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageService } from '../services/StorageService';
+import { STORAGE_KEYS, ERROR_MESSAGES } from '../constants';
+import { isValidTheme } from '../utils/validation';
 
 const ThemeContext = createContext();
 
@@ -92,6 +94,7 @@ const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(themes.light);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTheme();
@@ -99,26 +102,43 @@ export const ThemeProvider = ({ children }) => {
 
   const loadTheme = async () => {
     try {
-      const savedTheme = await AsyncStorage.getItem('selectedTheme');
-      if (savedTheme && themes[savedTheme]) {
+      setLoading(true);
+      const savedTheme = await StorageService.get(STORAGE_KEYS.SELECTED_THEME);
+      
+      if (savedTheme && isValidTheme(savedTheme, Object.keys(themes))) {
         setCurrentTheme(themes[savedTheme]);
       }
     } catch (error) {
-      console.error('Error loading theme:', error);
+      console.error(ERROR_MESSAGES.THEME_LOAD_FAILED, error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const changeTheme = async (themeKey) => {
+    if (!isValidTheme(themeKey, Object.keys(themes))) {
+      console.error(`Invalid theme key: ${themeKey}`);
+      return;
+    }
+
     try {
-      await AsyncStorage.setItem('selectedTheme', themeKey);
+      await StorageService.set(STORAGE_KEYS.SELECTED_THEME, themeKey);
       setCurrentTheme(themes[themeKey]);
     } catch (error) {
-      console.error('Error saving theme:', error);
+      console.error(ERROR_MESSAGES.THEME_SAVE_FAILED, error);
+      setCurrentTheme(themes[themeKey]);
     }
   };
 
+  const value = {
+    currentTheme,
+    changeTheme,
+    themes,
+    loading,
+  };
+
   return (
-    <ThemeContext.Provider value={{ currentTheme, changeTheme, themes }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

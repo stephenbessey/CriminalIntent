@@ -5,6 +5,7 @@ import { HeaderButton } from '../components/HeaderButton';
 import { CrimeListItem } from '../components/CrimeListItem';
 import { CrimeService } from '../services/CrimeService';
 import { useTheme } from '../context/ThemeContext';
+import { SCREENS, ERROR_MESSAGES } from '../constants';
 
 export default function IndexScreen({ navigation }) {
   const [crimes, setCrimes] = useState([]);
@@ -27,11 +28,11 @@ export default function IndexScreen({ navigation }) {
         <View style={styles.headerButtons}>
           <HeaderButton
             icon="add"
-            onPress={() => navigation.navigate('Detail', { crimeId: null })}
+            onPress={() => navigation.navigate(SCREENS.DETAIL, { crimeId: null })}
           />
           <HeaderButton
             icon="settings"
-            onPress={() => navigation.navigate('Settings')}
+            onPress={() => navigation.navigate(SCREENS.SETTINGS)}
           />
         </View>
       ),
@@ -42,16 +43,16 @@ export default function IndexScreen({ navigation }) {
     try {
       setLoading(true);
       const crimesData = await CrimeService.getAllCrimes();
-      setCrimes(crimesData.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setCrimes(crimesData);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load crimes');
+      Alert.alert('Error', error.message || ERROR_MESSAGES.LOAD_CRIMES_FAILED);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCrimePress = (crime) => {
-    navigation.navigate('Detail', { crimeId: crime.id });
+    navigation.navigate(SCREENS.DETAIL, { crimeId: crime.id });
   };
 
   const renderCrimeItem = ({ item }) => (
@@ -61,6 +62,8 @@ export default function IndexScreen({ navigation }) {
     />
   );
 
+  const keyExtractor = (item) => item.id;
+
   const styles = createStyles(currentTheme);
 
   return (
@@ -68,10 +71,11 @@ export default function IndexScreen({ navigation }) {
       <FlatList
         data={crimes}
         renderItem={renderCrimeItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         refreshing={loading}
         onRefresh={loadCrimes}
         style={styles.list}
+        contentContainerStyle={crimes.length === 0 ? styles.emptyList : null}
       />
     </View>
   );
@@ -84,6 +88,11 @@ const createStyles = (theme) => StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  emptyList: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerButtons: {
     flexDirection: 'row',

@@ -3,21 +3,19 @@ import { View, Text, Pressable, StyleSheet, Modal } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../context/ThemeContext';
 import { CustomButton } from './CustomButton';
+import { formatDateLong } from '../utils/dateUtils';
+import { 
+  OPACITY, 
+  SPACING, 
+  BORDER_RADIUS, 
+  FONT_SIZES,
+  COMPONENT_HEIGHTS 
+} from '../constants';
 
 export const DatePicker = ({ date, onDateChange }) => {
   const { currentTheme } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
   const styles = createStyles(currentTheme);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
@@ -34,9 +32,11 @@ export const DatePicker = ({ date, onDateChange }) => {
           pressed && styles.pressed
         ]}
         onPress={() => setShowPicker(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`Select date, current: ${formatDateLong(date)}`}
       >
         <Text style={styles.dateText}>
-          {formatDate(date)}
+          {formatDateLong(date)}
         </Text>
       </Pressable>
 
@@ -54,6 +54,7 @@ export const DatePicker = ({ date, onDateChange }) => {
                 mode="date"
                 display="default"
                 onChange={handleDateChange}
+                maximumDate={new Date()}
               />
               <CustomButton
                 title="Cancel"
@@ -73,29 +74,29 @@ const createStyles = (theme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 48,
+    borderRadius: BORDER_RADIUS.MEDIUM,
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.SM + SPACING.XS / 2,
+    minHeight: COMPONENT_HEIGHTS.INPUT,
     justifyContent: 'center',
   },
   pressed: {
-    opacity: 0.7,
+    opacity: OPACITY.PRESSED,
   },
   dateText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.MEDIUM,
     color: theme.colors.text,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: `rgba(0, 0, 0, ${OPACITY.OVERLAY})`,
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: BORDER_RADIUS.LARGE,
+    padding: SPACING.LG,
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',

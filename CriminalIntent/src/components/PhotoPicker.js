@@ -3,37 +3,66 @@ import { View, Image, Pressable, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
+import { 
+  ICON_SIZES, 
+  OPACITY, 
+  ASPECT_RATIOS, 
+  ERROR_MESSAGES,
+  COMPONENT_HEIGHTS,
+  BORDER_RADIUS 
+} from '../constants';
 
 export const PhotoPicker = ({ photo, onPhotoSelect }) => {
   const { currentTheme } = useTheme();
   const styles = createStyles(currentTheme);
 
   const requestPermission = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          ERROR_MESSAGES.PERMISSION_REQUIRED,
+          ERROR_MESSAGES.CAMERA_PERMISSION_MESSAGE,
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error requesting camera roll permission:', error);
       Alert.alert(
-        'Permission Required',
-        'Please grant camera roll permissions to use this feature.',
+        'Error',
+        'Unable to request permissions. Please check your settings.',
         [{ text: 'OK' }]
       );
       return false;
     }
-    return true;
   };
 
   const pickImage = async () => {
     const hasPermission = await requestPermission();
     if (!hasPermission) return;
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: ASPECT_RATIOS.PHOTO,
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      onPhotoSelect(result.assets[0].uri);
+      if (!result.canceled && result.assets && result.assets[0]) {
+        onPhotoSelect(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert(
+        'Error',
+        'Unable to select image. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -44,14 +73,20 @@ export const PhotoPicker = ({ photo, onPhotoSelect }) => {
         pressed && styles.pressed
       ]}
       onPress={pickImage}
+      accessibilityRole="button"
+      accessibilityLabel={photo ? 'Change photo' : 'Add photo'}
     >
       {photo ? (
-        <Image source={{ uri: photo }} style={styles.image} />
+        <Image 
+          source={{ uri: photo }} 
+          style={styles.image}
+          accessibilityLabel="Crime scene photo"
+        />
       ) : (
         <View style={styles.placeholder}>
           <Ionicons
             name="camera"
-            size={40}
+            size={ICON_SIZES.XLARGE}
             color={currentTheme.colors.textSecondary}
           />
         </View>
@@ -62,16 +97,16 @@ export const PhotoPicker = ({ photo, onPhotoSelect }) => {
 
 const createStyles = (theme) => StyleSheet.create({
   container: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
+    width: COMPONENT_HEIGHTS.PHOTO_PICKER,
+    height: COMPONENT_HEIGHTS.PHOTO_PICKER,
+    borderRadius: BORDER_RADIUS.MEDIUM,
     borderWidth: 2,
     borderColor: theme.colors.border,
     borderStyle: 'dashed',
     overflow: 'hidden',
   },
   pressed: {
-    opacity: 0.7,
+    opacity: OPACITY.PRESSED,
   },
   image: {
     width: '100%',

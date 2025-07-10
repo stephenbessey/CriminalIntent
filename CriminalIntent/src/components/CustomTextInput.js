@@ -1,6 +1,12 @@
 import React from 'react';
 import { TextInput, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { 
+  SPACING, 
+  FONT_SIZES, 
+  BORDER_RADIUS, 
+  COMPONENT_HEIGHTS 
+} from '../constants';
 
 export const CustomTextInput = ({ 
   value, 
@@ -8,7 +14,8 @@ export const CustomTextInput = ({
   placeholder, 
   multiline = false,
   style,
-  ...props 
+  maxLength,
+  ...otherProps 
 }) => {
   const { currentTheme } = useTheme();
   const styles = createStyles(currentTheme);
@@ -26,7 +33,9 @@ export const CustomTextInput = ({
       placeholderTextColor={currentTheme.colors.textSecondary}
       multiline={multiline}
       textAlignVertical={multiline ? 'top' : 'center'}
-      {...props}
+      maxLength={maxLength}
+      accessibilityLabel={placeholder}
+      {...otherProps}
     />
   );
 };
@@ -36,15 +45,15 @@ const createStyles = (theme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
+    borderRadius: BORDER_RADIUS.MEDIUM,
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.SM + SPACING.XS / 2,
+    fontSize: FONT_SIZES.MEDIUM,
     color: theme.colors.text,
-    minHeight: 48,
+    minHeight: COMPONENT_HEIGHTS.INPUT,
   },
   multiline: {
-    minHeight: 100,
-    paddingTop: 12,
+    minHeight: COMPONENT_HEIGHTS.MULTILINE_INPUT,
+    paddingTop: SPACING.SM + SPACING.XS / 2,
   },
 });

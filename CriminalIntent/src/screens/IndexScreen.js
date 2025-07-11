@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { HeaderButton } from '../components/HeaderButton';
+import { CustomButton } from '../components/CustomButton';
 import { CrimeListItem } from '../components/CrimeListItem';
-import { useThemedHeader } from '../hooks/useThemedHeader';
-import { useCrimesLoader } from '../hooks/useCrimesLoader';
+import { CrimeService } from '../services/CrimeService';
 import { useTheme } from '../context/ThemeContext';
-import { SCREENS } from '../constants';
+import { SCREENS, ERROR_MESSAGES, SPACING } from '../constants';
 
 export default function IndexScreen({ navigation }) {
+  const [crimes, setCrimes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { currentTheme } = useTheme();
-  const { crimes, loading, loadCrimes } = useCrimesLoader();
 
   useFocusEffect(
     React.useCallback(() => {
       loadCrimes();
-    }, [loadCrimes])
+    }, [])
   );
 
-  useThemedHeader(
-    navigation,
-    'Criminal Intent',
-    () => (
-      <View style={styles.headerButtons}>
-        <HeaderButton
-          icon="add"
-          onPress={() => navigation.navigate(SCREENS.DETAIL, { crimeId: null })}
-        />
-        <HeaderButton
-          icon="settings"
-          onPress={() => navigation.navigate(SCREENS.SETTINGS)}
-        />
-      </View>
-    )
-  );
+  const loadCrimes = async () => {
+    try {
+      setLoading(true);
+      const crimesData = await CrimeService.getAllCrimes();
+      setCrimes(crimesData);
+    } catch (error) {
+      Alert.alert('Error', error.message || ERROR_MESSAGES.LOAD_CRIMES_FAILED);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCrimePress = (crime) => {
     navigation.navigate(SCREENS.DETAIL, { crimeId: crime.id });
+  };
+
+  const handleAddCrime = () => {
+    navigation.navigate(SCREENS.DETAIL, { crimeId: null });
+  };
+
+  const handleSettings = () => {
+    navigation.navigate(SCREENS.SETTINGS);
   };
 
   const renderCrimeItem = ({ item }) => (
@@ -52,6 +55,21 @@ export default function IndexScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.actionButtons}>
+        <CustomButton
+          title="Add Crime"
+          onPress={handleAddCrime}
+          variant="primary"
+          style={styles.actionButton}
+        />
+        <CustomButton
+          title="Settings"
+          onPress={handleSettings}
+          variant="secondary"
+          style={styles.actionButton}
+        />
+      </View>
+
       <FlatList
         data={crimes}
         renderItem={renderCrimeItem}
@@ -70,6 +88,17 @@ const createStyles = (theme) => StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: SPACING.MD,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  actionButton: {
+    flex: 0.48, 
+  },
   list: {
     flex: 1,
   },
@@ -77,8 +106,5 @@ const createStyles = (theme) => StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerButtons: {
-    flexDirection: 'row',
   },
 });

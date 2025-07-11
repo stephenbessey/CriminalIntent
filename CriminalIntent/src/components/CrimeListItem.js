@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useTheme } from '../context/ThemeContext';
 import { formatDateShort } from '../utils/dateUtils';
 import { ICON_SIZES, OPACITY, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../constants';
@@ -34,12 +35,7 @@ export const CrimeListItem = ({ crime, onPress }) => {
       </View>
       {crime.solved && (
         <View style={styles.iconContainer}>
-          <Ionicons
-            name="hand-left"
-            size={ICON_SIZES.MEDIUM}
-            color={currentTheme.colors.success}
-            accessibilityLabel="Solved"
-          />
+          <FontAwesome6 name="handcuffs" size={24} color={currentTheme.colors.text} />
         </View>
       )}
     </Pressable>

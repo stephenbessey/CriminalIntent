@@ -6,11 +6,9 @@ import { useTheme } from '../context/ThemeContext';
 import { 
   ICON_SIZES, 
   OPACITY, 
-  ASPECT_RATIOS, 
   ERROR_MESSAGES,
   COMPONENT_HEIGHTS,
-  BORDER_RADIUS,
-  VALIDATION_LIMITS 
+  BORDER_RADIUS
 } from '../constants';
 
 export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
@@ -20,7 +18,7 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
   const requestPermission = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert(
           ERROR_MESSAGES.PERMISSION_REQUIRED,
@@ -29,10 +27,10 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
         );
         return false;
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Error requesting camera roll permission:', error);
+      console.error('Error requesting photo library permission:', error);
       Alert.alert(
         'Error',
         'Unable to request permissions. Please check your settings.',
@@ -42,42 +40,22 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
     }
   };
 
-  const validateImageSize = (asset) => {
-    if (asset.fileSize) {
-      const sizeInMB = asset.fileSize / (1024 * 1024);
-      if (sizeInMB > VALIDATION_LIMITS.PHOTO_MAX_SIZE_MB) {
-        Alert.alert(
-          'File Too Large',
-          `Please select an image smaller than ${VALIDATION_LIMITS.PHOTO_MAX_SIZE_MB}MB`,
-          [{ text: 'OK' }]
-        );
-        return false;
-      }
-    }
-    return true;
-  };
-
   const pickImage = async () => {
     if (disabled) return;
-    
+
     const hasPermission = await requestPermission();
     if (!hasPermission) return;
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images', // Simple string instead of MediaType.Images
         allowsEditing: true,
-        aspect: ASPECT_RATIOS.PHOTO,
-        quality: 0.8, // Reduce quality to manage file size
-        exif: false, // Remove EXIF data for privacy
+        aspect: [4, 3],
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const asset = result.assets[0];
-        
-        if (validateImageSize(asset)) {
-          onPhotoSelect(asset.uri);
-        }
+        onPhotoSelect(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Error picking image:', error);
@@ -89,59 +67,6 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
     }
   };
 
-  const takePhoto = async () => {
-    if (disabled) return;
-    
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert(
-          ERROR_MESSAGES.PERMISSION_REQUIRED,
-          'Please grant camera permissions to take photos.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: ASPECT_RATIOS.PHOTO,
-        quality: 0.8,
-        exif: false,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const asset = result.assets[0];
-        
-        if (validateImageSize(asset)) {
-          onPhotoSelect(asset.uri);
-        }
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      Alert.alert(
-        'Error',
-        'Unable to take photo. Please try again.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
-
-  const showImageOptions = () => {
-    if (disabled) return;
-    
-    Alert.alert(
-      'Select Photo',
-      'Choose how you would like to add a photo',
-      [
-        { text: 'Camera', onPress: takePhoto },
-        { text: 'Photo Library', onPress: pickImage },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
-  };
-
   return (
     <Pressable
       style={({ pressed }) => [
@@ -149,43 +74,29 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled
       ]}
-      onPress={showImageOptions}
+      onPress={pickImage}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={photo ? 'Change photo' : 'Add photo'}
       accessibilityState={{ disabled }}
     >
       {photo ? (
-        <PhotoDisplay photo={photo} />
+        <Image
+          source={{ uri: photo }}
+          style={styles.image}
+          accessibilityLabel="Crime scene photo"
+          resizeMode="cover"
+        />
       ) : (
-        <PhotoPlaceholder currentTheme={currentTheme} disabled={disabled} />
+        <View style={styles.placeholder}>
+          <Ionicons
+            name="images"
+            size={ICON_SIZES.XLARGE}
+            color={disabled ? currentTheme.colors.border : currentTheme.colors.textSecondary}
+          />
+        </View>
       )}
     </Pressable>
-  );
-};
-
-const PhotoDisplay = ({ photo }) => {
-  return (
-    <Image 
-      source={{ uri: photo }} 
-      style={styles.image}
-      accessibilityLabel="Crime scene photo"
-      resizeMode="cover"
-    />
-  );
-};
-
-const PhotoPlaceholder = ({ currentTheme, disabled }) => {
-  const styles = createStyles(currentTheme);
-  
-  return (
-    <View style={styles.placeholder}>
-      <Ionicons
-        name="camera"
-        size={ICON_SIZES.XLARGE}
-        color={disabled ? currentTheme.colors.border : currentTheme.colors.textSecondary}
-      />
-    </View>
   );
 };
 

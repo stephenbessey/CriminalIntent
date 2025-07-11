@@ -1,8 +1,12 @@
-import { v4 as uuidv4 } from 'react-native-uuid';
 import { StorageService } from './StorageService';
 import { STORAGE_KEYS, ERROR_MESSAGES } from '../constants';
 import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
 import { sortByDateDescending } from '../utils/dateUtils';
+
+// Simple UUID generator that works in Expo
+const generateId = () => {
+  return 'crime_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
 
 // Custom error classes for better error handling
 export class CrimeNotFoundError extends Error {
@@ -38,11 +42,11 @@ export class CrimeService {
     try {
       const crimes = await this.getAllCrimes();
       const crime = crimes.find(crime => crime.id === id);
-      
+
       if (!crime) {
         throw new CrimeNotFoundError(id);
       }
-      
+
       return crime;
     } catch (error) {
       if (error instanceof CrimeNotFoundError) {
@@ -54,16 +58,16 @@ export class CrimeService {
   }
 
   static async saveCrime(crimeData) {
-    const crimeId = crimeData.id || uuidv4();
+    const crimeId = crimeData.id || generateId();
     const now = new Date().toISOString();
-    
+
     const crime = this._prepareCrimeData(crimeData, crimeId, now);
     this._validateCrimeData(crime);
-    
+
     try {
       const crimes = await StorageService.get(STORAGE_KEYS.CRIMES_DATA) || [];
       const updatedCrimes = this._upsertCrime(crimes, crime);
-      
+
       await StorageService.set(STORAGE_KEYS.CRIMES_DATA, updatedCrimes);
       return crime;
     } catch (error) {
@@ -83,11 +87,11 @@ export class CrimeService {
     try {
       const crimes = await StorageService.get(STORAGE_KEYS.CRIMES_DATA) || [];
       const filteredCrimes = crimes.filter(crime => crime.id !== id);
-      
+
       if (crimes.length === filteredCrimes.length) {
         throw new CrimeNotFoundError(id);
       }
-      
+
       await StorageService.set(STORAGE_KEYS.CRIMES_DATA, filteredCrimes);
       return true;
     } catch (error) {
@@ -102,9 +106,9 @@ export class CrimeService {
   static async getFilteredCrimes(filter = {}) {
     try {
       let crimes = await this.getAllCrimes();
-      
+
       crimes = this._applyFilters(crimes, filter);
-      
+
       return crimes;
     } catch (error) {
       console.error('Error filtering crimes:', error);
@@ -115,7 +119,7 @@ export class CrimeService {
   static async getCrimeStats() {
     try {
       const crimes = await this.getAllCrimes();
-      
+
       return this._calculateStats(crimes);
     } catch (error) {
       console.error('Error calculating crime statistics:', error);
@@ -132,7 +136,7 @@ export class CrimeService {
     }
   }
 
-  // Private helper methods (following Single Responsibility Principle)
+  // Private helper methods
   static _prepareCrimeData(crimeData, crimeId, now) {
     return {
       id: crimeId,
@@ -156,41 +160,41 @@ export class CrimeService {
 
   static _upsertCrime(crimes, crime) {
     const existingIndex = crimes.findIndex(c => c.id === crime.id);
-    
+
     if (existingIndex >= 0) {
       crimes[existingIndex] = crime;
     } else {
       crimes.push(crime);
     }
-    
+
     return crimes;
   }
 
   static _applyFilters(crimes, filter) {
     let filteredCrimes = crimes;
-    
+
     if (filter.solved !== undefined) {
       filteredCrimes = filteredCrimes.filter(crime => crime.solved === filter.solved);
     }
-    
+
     if (filter.searchTerm) {
       const searchLower = filter.searchTerm.toLowerCase();
-      filteredCrimes = filteredCrimes.filter(crime => 
+      filteredCrimes = filteredCrimes.filter(crime =>
         crime.title.toLowerCase().includes(searchLower) ||
         crime.details.toLowerCase().includes(searchLower)
       );
     }
-    
+
     if (filter.startDate) {
       const startDate = new Date(filter.startDate);
       filteredCrimes = filteredCrimes.filter(crime => new Date(crime.date) >= startDate);
     }
-    
+
     if (filter.endDate) {
       const endDate = new Date(filter.endDate);
       filteredCrimes = filteredCrimes.filter(crime => new Date(crime.date) <= endDate);
     }
-    
+
     return filteredCrimes;
   }
 
@@ -200,14 +204,14 @@ export class CrimeService {
       solved: crimes.filter(c => c.solved).length,
       unsolved: crimes.filter(c => !c.solved).length,
       withPhotos: crimes.filter(c => c.photo).length,
-      lastUpdated: crimes.length > 0 
-        ? crimes.reduce((latest, crime) => 
-            new Date(crime.updatedAt) > new Date(latest) ? crime.updatedAt : latest, 
+      lastUpdated: crimes.length > 0
+        ? crimes.reduce((latest, crime) =>
+            new Date(crime.updatedAt) > new Date(latest) ? crime.updatedAt : latest,
             crimes[0].updatedAt
           )
         : null,
     };
-    
+
     return stats;
   }
 }

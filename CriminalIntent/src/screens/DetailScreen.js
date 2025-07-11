@@ -20,8 +20,7 @@ import {
   PLACEHOLDERS,
   SPACING,
   FONT_SIZES,
-  FONT_WEIGHTS,
-  SCREENS
+  FONT_WEIGHTS
 } from '../constants';
 
 export default function DetailScreen({ route, navigation }) {
@@ -94,23 +93,10 @@ export default function DetailScreen({ route, navigation }) {
     }));
   };
 
-  const handleSettings = () => {
-    navigation.navigate(SCREENS.SETTINGS);
-  };
-
   const styles = createStyles(currentTheme);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.topActions}>
-        <CustomButton
-          title="Settings"
-          onPress={handleSettings}
-          variant="secondary"
-          style={styles.settingsButton}
-        />
-      </View>
-
       <View style={styles.photoSection}>
         <PhotoPicker
           photo={crime.photo}
@@ -180,13 +166,6 @@ const createStyles = (theme) => StyleSheet.create({
   },
   content: {
     padding: SPACING.MD,
-  },
-  topActions: {
-    alignItems: 'flex-end',
-    marginBottom: SPACING.MD,
-  },
-  settingsButton: {
-    minWidth: 100,
   },
   photoSection: {
     alignItems: 'center',

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { CustomButton } from '../components/CustomButton';
 import { CrimeListItem } from '../components/CrimeListItem';
 import { CrimeService } from '../services/CrimeService';
 import { useTheme } from '../context/ThemeContext';
-import { SCREENS, ERROR_MESSAGES, SPACING } from '../constants';
+import { ERROR_MESSAGES } from '../constants';
 
 export default function IndexScreen({ navigation }) {
   const [crimes, setCrimes] = useState([]);
@@ -31,15 +30,7 @@ export default function IndexScreen({ navigation }) {
   };
 
   const handleCrimePress = (crime) => {
-    navigation.navigate(SCREENS.DETAIL, { crimeId: crime.id });
-  };
-
-  const handleAddCrime = () => {
-    navigation.navigate(SCREENS.DETAIL, { crimeId: null });
-  };
-
-  const handleSettings = () => {
-    navigation.navigate(SCREENS.SETTINGS);
+    navigation.navigate('Detail', { crimeId: crime.id });
   };
 
   const renderCrimeItem = ({ item }) => (
@@ -55,21 +46,6 @@ export default function IndexScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.actionButtons}>
-        <CustomButton
-          title="Add Crime"
-          onPress={handleAddCrime}
-          variant="primary"
-          style={styles.actionButton}
-        />
-        <CustomButton
-          title="Settings"
-          onPress={handleSettings}
-          variant="secondary"
-          style={styles.actionButton}
-        />
-      </View>
-
       <FlatList
         data={crimes}
         renderItem={renderCrimeItem}
@@ -87,17 +63,6 @@ const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: SPACING.MD,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  actionButton: {
-    flex: 0.48, 
   },
   list: {
     flex: 1,

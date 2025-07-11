@@ -42,6 +42,8 @@ const createStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+    height: 44,
+    maxHeight: 44,
     paddingHorizontal: SPACING.SM,
   },
   headerTitle: {

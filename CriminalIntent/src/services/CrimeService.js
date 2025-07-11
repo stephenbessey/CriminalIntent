@@ -3,12 +3,10 @@ import { STORAGE_KEYS, ERROR_MESSAGES } from '../constants';
 import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
 import { sortByDateDescending } from '../utils/dateUtils';
 
-// Simple UUID generator that works in Expo
 const generateId = () => {
   return 'crime_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 };
 
-// Custom error classes for better error handling
 export class CrimeNotFoundError extends Error {
   constructor(id) {
     super(`Crime with ID ${id} not found`);
@@ -136,7 +134,6 @@ export class CrimeService {
     }
   }
 
-  // Private helper methods
   static _prepareCrimeData(crimeData, crimeId, now) {
     return {
       id: crimeId,

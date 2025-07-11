@@ -48,7 +48,7 @@ export const PhotoPicker = ({ photo, onPhotoSelect, disabled = false }) => {
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'images', // Simple string instead of MediaType.Images
+        mediaTypes: 'images', 
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,

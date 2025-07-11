@@ -1,6 +1,37 @@
 {
+  "name": "criminalintent",
+  "main": "node_modules/expo/AppEntry.js",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
   "dependencies": {
-    "react-native-get-random-values": "^1.11.0",
-    "uuid": "^11.1.0"
-  }
+    "@expo/vector-icons": "^14.1.0",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.1.15",
+    "expo": "~53.0.17",
+    "expo-constants": "~17.1.7",
+    "expo-font": "~13.3.2",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-svg": "15.9.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~9.2.0"
+  },
+  "private": true
 }

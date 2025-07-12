@@ -4,13 +4,13 @@ import {
   ScrollView, 
   StyleSheet, 
   Alert, 
-  Text,
-  Switch 
+  Text 
 } from 'react-native';
 import { CustomTextInput } from '../components/CustomTextInput';
 import { CustomButton } from '../components/CustomButton';
 import { DatePicker } from '../components/DatePicker';
 import { PhotoPicker } from '../components/PhotoPicker';
+import { CustomCheckbox } from '../components/CustomCheckbox';
 import { CrimeService } from '../services/CrimeService';
 import { useTheme } from '../context/ThemeContext';
 import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
@@ -35,12 +35,22 @@ export default function DetailScreen({ route, navigation }) {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     if (crimeId) {
       loadCrime();
     }
   }, [crimeId]);
+
+  useEffect(() => {
+    if (saveSuccess) {
+      const timer = setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveSuccess]);
 
   const loadCrime = async () => {
     try {
@@ -66,19 +76,25 @@ export default function DetailScreen({ route, navigation }) {
 
     try {
       setSaving(true);
-      await CrimeService.saveCrime({
+      const savedCrime = await CrimeService.saveCrime({
         ...crime,
         id: crimeId,
       });
       
+      setCrime(savedCrime);
+      
+      setSaveSuccess(true);
+      
       Alert.alert(
         'Success',
         crimeId ? SUCCESS_MESSAGES.CRIME_UPDATED : SUCCESS_MESSAGES.CRIME_CREATED,
-        [{ 
-          text: 'OK',
-          onPress: () => navigation.goBack()
-        }]
+        [{ text: 'OK' }]
       );
+
+      if (!crimeId && savedCrime.id) {
+        navigation.setParams({ crimeId: savedCrime.id });
+      }
+      
     } catch (error) {
       Alert.alert('Error', error.message || ERROR_MESSAGES.SAVE_CRIME_FAILED);
     } finally {
@@ -91,12 +107,23 @@ export default function DetailScreen({ route, navigation }) {
       ...prev,
       [field]: value,
     }));
+    if (saveSuccess) {
+      setSaveSuccess(false);
+    }
   };
 
   const styles = createStyles(currentTheme);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {saveSuccess && (
+        <View style={styles.successBanner}>
+          <Text style={styles.successText}>
+            ✓ {crimeId ? 'Crime updated successfully!' : 'Crime created successfully!'}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.photoSection}>
         <PhotoPicker
           photo={crime.photo}
@@ -133,16 +160,11 @@ export default function DetailScreen({ route, navigation }) {
         />
       </View>
 
-      <View style={styles.switchSection}>
+      <View style={styles.checkboxSection}>
         <Text style={styles.label}>Solved</Text>
-        <Switch
+        <CustomCheckbox
           value={crime.solved}
           onValueChange={(value) => updateCrime('solved', value)}
-          trackColor={{ 
-            false: currentTheme.colors.border, 
-            true: currentTheme.colors.success 
-          }}
-          thumbColor="#FFFFFF"
           accessibilityLabel="Crime solved status"
         />
       </View>
@@ -167,6 +189,18 @@ const createStyles = (theme) => StyleSheet.create({
   content: {
     padding: SPACING.MD,
   },
+  successBanner: {
+    backgroundColor: theme.colors.success,
+    padding: SPACING.SM,
+    borderRadius: 8,
+    marginBottom: SPACING.MD,
+    alignItems: 'center',
+  },
+  successText: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.MEDIUM,
+    fontWeight: FONT_WEIGHTS.SEMIBOLD,
+  },
   photoSection: {
     alignItems: 'center',
     marginBottom: SPACING.LG,
@@ -174,7 +208,7 @@ const createStyles = (theme) => StyleSheet.create({
   section: {
     marginBottom: SPACING.LG,
   },
-  switchSection: {
+  checkboxSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

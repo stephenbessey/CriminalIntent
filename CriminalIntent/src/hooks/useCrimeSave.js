@@ -4,31 +4,38 @@ import { CrimeService } from '../services/CrimeService';
 import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants';
 
-export const useCrimeSave = (crimeId, navigation) => {
+export const useCrimeSave = (crimeId, onSaveSuccess) => {
   const [saving, setSaving] = useState(false);
   
   const handleSave = useCallback(async (crime) => {
     const errors = validateCrime(crime);
     if (hasValidationErrors(errors)) {
       Alert.alert('Validation Error', getFirstErrorMessage(errors));
-      return;
+      return { success: false };
     }
 
     try {
       setSaving(true);
-      await CrimeService.saveCrime({ ...crime, id: crimeId });
+      const savedCrime = await CrimeService.saveCrime({ ...crime, id: crimeId });
       
       Alert.alert(
         'Success',
         crimeId ? SUCCESS_MESSAGES.CRIME_UPDATED : SUCCESS_MESSAGES.CRIME_CREATED,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        [{ text: 'OK' }]
       );
+
+      if (onSaveSuccess) {
+        onSaveSuccess(savedCrime);
+      }
+
+      return { success: true, crime: savedCrime };
     } catch (error) {
       Alert.alert('Error', error.message || ERROR_MESSAGES.SAVE_CRIME_FAILED);
+      return { success: false, error };
     } finally {
       setSaving(false);
     }
-  }, [crimeId, navigation]);
+  }, [crimeId, onSaveSuccess]);
   
   return { saving, handleSave };
 };

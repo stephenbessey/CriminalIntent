@@ -2,9 +2,10 @@ import { StorageService } from './StorageService';
 import { STORAGE_KEYS, ERROR_MESSAGES } from '../constants';
 import { validateCrime, hasValidationErrors, getFirstErrorMessage } from '../utils/validation';
 import { sortByDateDescending } from '../utils/dateUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 const generateId = () => {
-  return 'crime_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  return uuidv4();
 };
 
 export class CrimeNotFoundError extends Error {
@@ -104,9 +105,7 @@ export class CrimeService {
   static async getFilteredCrimes(filter = {}) {
     try {
       let crimes = await this.getAllCrimes();
-
       crimes = this._applyFilters(crimes, filter);
-
       return crimes;
     } catch (error) {
       console.error('Error filtering crimes:', error);
@@ -117,7 +116,6 @@ export class CrimeService {
   static async getCrimeStats() {
     try {
       const crimes = await this.getAllCrimes();
-
       return this._calculateStats(crimes);
     } catch (error) {
       console.error('Error calculating crime statistics:', error);
